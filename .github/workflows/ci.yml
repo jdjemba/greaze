@@ -26,9 +26,11 @@ jobs:
           key: composer-${{ hashFiles('**/composer.lock') }}
 
       - name: Install Dependencies
+        id: install
         run: composer install --prefer-dist --no-interaction --no-progress
 
-  linter:
+  php-cs-fixer:
+    name: PHP-CS-Fixer
     needs: ["deps"]
     runs-on: ubuntu-latest
 
@@ -42,19 +44,29 @@ jobs:
           path: vendor
           key: composer-${{ hashFiles('**/composer.lock') }}
 
-      - name: Generate cs config
-        run: cp phpcs.xml.dist phpcs.xml
-
-      - name: PHP Code Sniffer
-        uses: php-actions/phpcs@v1
+      - name: Run PHP-CS-Fixer
+        uses: docker://oskarstark/php-cs-fixer-ga
         with:
-          path: src/
-          php_version: 8.2
-          standard: phpcs.xml
+          args: --diff --dry-run
 
-      - name: PHPStan Static Analysis
+  static-analysis:
+    name: PHPStan
+    needs: ["deps"]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Restore Cache
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('**/composer.lock') }}
+
+      - name: Run PHPStan
         uses: php-actions/phpstan@v3
         with:
           path: src/
-          php_version: 8.2
+          php_version: 8.3
           level: 9
