@@ -39,14 +39,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     /**
-     * @var Collection<int, Comment>
+     * @var Collection<int, Playlist>
      */
-    #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'author')]
-    private Collection $comments;
+    #[ORM\OneToMany(targetEntity: Playlist::class, mappedBy: 'owner')]
+    private Collection $playlists;
 
     public function __construct()
     {
-        $this->comments = new ArrayCollection();
+        $this->playlists = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -125,29 +125,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @return Collection<int, Comment>
+     * @return Collection<int, Playlist>
      */
-    public function getComments(): Collection
+    public function getPlaylists(): Collection
     {
-        return $this->comments;
+        return $this->playlists;
     }
 
-    public function addComment(Comment $comment): static
+    public function addPlaylist(Playlist $playlist): static
     {
-        if (!$this->comments->contains($comment)) {
-            $this->comments->add($comment);
-            $comment->setAuthor($this);
+        if (!$this->playlists->contains($playlist)) {
+            $this->playlists->add($playlist);
+            $playlist->setOwner($this);
         }
 
         return $this;
     }
 
-    public function removeComment(Comment $comment): static
+    public function removePlaylist(Playlist $playlist): static
     {
-        if ($this->comments->removeElement($comment)) {
+        if ($this->playlists->removeElement($playlist)) {
             // set the owning side to null (unless already changed)
-            if ($comment->getAuthor() === $this) {
-                $comment->setAuthor(null);
+            if ($playlist->getOwner() === $this) {
+                $playlist->setOwner(null);
             }
         }
 

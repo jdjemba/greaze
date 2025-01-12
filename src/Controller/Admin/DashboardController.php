@@ -2,6 +2,11 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\Album;
+use App\Entity\Artist;
+use App\Entity\Comment;
+use App\Entity\Playlist;
+use App\Entity\Track;
 use App\Entity\User;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -17,7 +22,7 @@ class DashboardController extends AbstractDashboardController
     {
         $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
 
-        return $this->redirect($adminUrlGenerator->setController(UserCrudController::class)->generateUrl());
+        return $this->redirect($adminUrlGenerator->setController(AlbumCrudController::class)->generateUrl());
     }
 
     public function configureDashboard(): Dashboard
@@ -29,9 +34,15 @@ class DashboardController extends AbstractDashboardController
     public function configureMenuItems(): iterable
     {
         yield MenuItem::linkToDashboard('Dashboard', 'fa fa-home');
-        yield MenuItem::linkToCrud('Users', 'fas fa-user', User::class);
-        // yield MenuItem::linkToCrud('Comments', 'fa fa-comment', Comment::class);
-        // yield MenuItem::linkToCrud('Comments', 'fa fa-comment', Comment::class);
-        // yield MenuItem::linkToCrud('Comments', 'fa fa-comment', Comment::class);
+
+        yield MenuItem::section('Music', 'fa fa-music');
+        yield MenuItem::linkToCrud('Albums', '', Album::class);
+        yield MenuItem::linkToCrud('Artists', '', Artist::class);
+        yield MenuItem::linkToCrud('Playlists', '', Playlist::class);
+        yield MenuItem::linkToCrud('Tracks', '', Track::class);
+
+        yield MenuItem::section('Users', 'fa fa-users');
+        yield MenuItem::linkToCrud('Comments', '', Comment::class);
+        yield MenuItem::linkToCrud('Users', '', User::class);
     }
 }

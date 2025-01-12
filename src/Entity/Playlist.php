@@ -2,21 +2,32 @@
 
 namespace App\Entity;
 
+use App\Entity\Trait\BaseTrait;
 use App\Repository\PlaylistRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PlaylistRepository::class)]
 class Playlist
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    use BaseTrait;
 
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    #[ORM\ManyToOne(inversedBy: 'playlists')]
+    private ?User $owner = null;
+
+    #[ORM\Column]
+    private ?bool $public = false;
+
+    #[ORM\Column(type: Types::TEXT)]
+    private ?string $description = null;
+
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?Artwork $artwork = null;
+
+    #[ORM\Column]
+    private ?bool $collaborative = null;
 
     /**
      * @var Collection<int, Track>
@@ -29,19 +40,62 @@ class Playlist
         $this->tracks = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getOwner(): ?User
     {
-        return $this->id;
+        return $this->owner;
     }
 
-    public function getName(): ?string
+    public function setOwner(?User $owner): static
     {
-        return $this->name;
+        $this->owner = $owner;
+
+        return $this;
     }
 
-    public function setName(string $name): static
+    public function isPublic(): ?bool
     {
-        $this->name = $name;
+        return $this->public;
+    }
+
+    public function setPublic(bool $public): static
+    {
+        $this->public = $public;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): static
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getArtwork(): ?Artwork
+    {
+        return $this->artwork;
+    }
+
+    public function setArtwork(?Artwork $artwork): static
+    {
+        $this->artwork = $artwork;
+
+        return $this;
+    }
+
+    public function isCollaborative(): ?bool
+    {
+        return $this->collaborative;
+    }
+
+    public function setCollaborative(bool $collaborative): static
+    {
+        $this->collaborative = $collaborative;
 
         return $this;
     }

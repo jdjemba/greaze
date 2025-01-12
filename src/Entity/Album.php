@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Trait\BaseTrait;
 use App\Repository\AlbumRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -10,60 +11,121 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: AlbumRepository::class)]
 class Album
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
+    use BaseTrait;
+
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?Artwork $artwork = null;
+
+    /**
+     * @var Collection<int, Artist>
+     */
+    #[ORM\ManyToMany(targetEntity: Artist::class, inversedBy: 'albums')]
+    private Collection $artists;
+
+    #[ORM\Column(length: 255)]
+    private ?string $releaseDate = null;
+
     #[ORM\Column]
-    private ?int $id = null;
+    private ?bool $isSingle = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    #[ORM\Column]
+    private array $genreNames = [];
 
-    #[ORM\Column(length: 255)]
-    private ?string $artist = null;
+    #[ORM\Column]
+    private ?int $trackCount = null;
 
     /**
      * @var Collection<int, Track>
      */
-    #[ORM\ManyToMany(targetEntity: Track::class, inversedBy: 'albums')]
+    #[ORM\OneToMany(targetEntity: Track::class, mappedBy: 'album')]
     private Collection $tracks;
-
-    /**
-     * @var Collection<int, Comment>
-     */
-    #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'album')]
-    private Collection $comments;
 
     public function __construct()
     {
-        $this->comments = new ArrayCollection();
+        $this->artists = new ArrayCollection();
         $this->tracks = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getArtwork(): ?Artwork
     {
-        return $this->id;
+        return $this->artwork;
     }
 
-    public function getName(): ?string
+    public function setArtwork(?Artwork $artwork): static
     {
-        return $this->name;
-    }
-
-    public function setName(string $name): static
-    {
-        $this->name = $name;
+        $this->artwork = $artwork;
 
         return $this;
     }
 
-    public function getArtist(): ?string
+    /**
+     * @return Collection<int, Artist>
+     */
+    public function getArtists(): Collection
     {
-        return $this->artist;
+        return $this->artists;
     }
 
-    public function setArtist(string $artist): static
+    public function addArtist(Artist $artist): static
     {
-        $this->artist = $artist;
+        if (!$this->artists->contains($artist)) {
+            $this->artists->add($artist);
+        }
+
+        return $this;
+    }
+
+    public function removeArtist(Artist $artist): static
+    {
+        $this->artists->removeElement($artist);
+
+        return $this;
+    }
+
+    public function getReleaseDate(): ?string
+    {
+        return $this->releaseDate;
+    }
+
+    public function setReleaseDate(string $releaseDate): static
+    {
+        $this->releaseDate = $releaseDate;
+
+        return $this;
+    }
+
+    public function isSingle(): ?bool
+    {
+        return $this->isSingle;
+    }
+
+    public function setSingle(bool $isSingle): static
+    {
+        $this->isSingle = $isSingle;
+
+        return $this;
+    }
+
+    public function getGenreNames(): array
+    {
+        return $this->genreNames;
+    }
+
+    public function setGenreNames(array $genreNames): static
+    {
+        $this->genreNames = $genreNames;
+
+        return $this;
+    }
+
+    public function getTrackCount(): ?int
+    {
+        return $this->trackCount;
+    }
+
+    public function setTrackCount(int $trackCount): static
+    {
+        $this->trackCount = $trackCount;
 
         return $this;
     }
@@ -80,6 +142,7 @@ class Album
     {
         if (!$this->tracks->contains($track)) {
             $this->tracks->add($track);
+            $track->setAlbum($this);
         }
 
         return $this;
@@ -87,35 +150,10 @@ class Album
 
     public function removeTrack(Track $track): static
     {
-        $this->tracks->removeElement($track);
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Comment>
-     */
-    public function getComments(): Collection
-    {
-        return $this->comments;
-    }
-
-    public function addComment(Comment $comment): static
-    {
-        if (!$this->comments->contains($comment)) {
-            $this->comments->add($comment);
-            $comment->setAlbum($this);
-        }
-
-        return $this;
-    }
-
-    public function removeComment(Comment $comment): static
-    {
-        if ($this->comments->removeElement($comment)) {
+        if ($this->tracks->removeElement($track)) {
             // set the owning side to null (unless already changed)
-            if ($comment->getAlbum() === $this) {
-                $comment->setAlbum(null);
+            if ($track->getAlbum() === $this) {
+                $track->setAlbum(null);
             }
         }
 
