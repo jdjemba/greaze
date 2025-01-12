@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Trait\BaseTrait;
 use App\Repository\ArtistRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -10,38 +11,64 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: ArtistRepository::class)]
 class Artist
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
+    use BaseTrait;
 
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?Artwork $artwork = null;
+
+    /**
+     * @var Collection<int, Album>
+     */
+    #[ORM\ManyToMany(targetEntity: Album::class, mappedBy: 'artists')]
+    private Collection $albums;
 
     /**
      * @var Collection<int, Track>
      */
-    #[ORM\ManyToMany(targetEntity: Track::class, inversedBy: 'artists')]
+    #[ORM\ManyToMany(targetEntity: Track::class, mappedBy: 'artists')]
     private Collection $tracks;
 
     public function __construct()
     {
+        $this->albums = new ArrayCollection();
         $this->tracks = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getArtwork(): ?Artwork
     {
-        return $this->id;
+        return $this->artwork;
     }
 
-    public function getName(): ?string
+    public function setArtwork(?Artwork $artwork): static
     {
-        return $this->name;
+        $this->artwork = $artwork;
+
+        return $this;
     }
 
-    public function setName(string $name): static
+    /**
+     * @return Collection<int, Album>
+     */
+    public function getAlbums(): Collection
     {
-        $this->name = $name;
+        return $this->albums;
+    }
+
+    public function addAlbum(Album $album): static
+    {
+        if (!$this->albums->contains($album)) {
+            $this->albums->add($album);
+            $album->addArtist($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAlbum(Album $album): static
+    {
+        if ($this->albums->removeElement($album)) {
+            $album->removeArtist($this);
+        }
 
         return $this;
     }
@@ -58,6 +85,7 @@ class Artist
     {
         if (!$this->tracks->contains($track)) {
             $this->tracks->add($track);
+            $track->addArtist($this);
         }
 
         return $this;
@@ -65,7 +93,9 @@ class Artist
 
     public function removeTrack(Track $track): static
     {
-        $this->tracks->removeElement($track);
+        if ($this->tracks->removeElement($track)) {
+            $track->removeArtist($this);
+        }
 
         return $this;
     }

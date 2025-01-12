@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Entity\Trait\BaseTrait;
 use App\Repository\TrackRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -10,25 +11,28 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: TrackRepository::class)]
 class Track
 {
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    private ?int $id = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $name = null;
+    use BaseTrait;
 
     /**
      * @var Collection<int, Artist>
      */
-    #[ORM\ManyToMany(targetEntity: Artist::class, mappedBy: 'tracks')]
+    #[ORM\ManyToMany(targetEntity: Artist::class, inversedBy: 'tracks')]
     private Collection $artists;
 
-    /**
-     * @var Collection<int, Album>
-     */
-    #[ORM\ManyToMany(targetEntity: Album::class, mappedBy: 'tracks')]
-    private Collection $albums;
+    #[ORM\Column(length: 255)]
+    private ?string $composerName = null;
+
+    #[ORM\ManyToOne(inversedBy: 'tracks')]
+    private ?Album $album = null;
+
+    #[ORM\Column]
+    private array $genreNames = [];
+
+    #[ORM\Column]
+    private ?int $trackNumber = null;
+
+    #[ORM\Column]
+    private ?int $durationInMs = null;
 
     /**
      * @var Collection<int, Playlist>
@@ -44,27 +48,9 @@ class Track
 
     public function __construct()
     {
-        $this->comments = new ArrayCollection();
-        $this->playlists = new ArrayCollection();
         $this->artists = new ArrayCollection();
-        $this->albums = new ArrayCollection();
-    }
-
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): static
-    {
-        $this->name = $name;
-
-        return $this;
+        $this->playlists = new ArrayCollection();
+        $this->comments = new ArrayCollection();
     }
 
     /**
@@ -79,7 +65,6 @@ class Track
     {
         if (!$this->artists->contains($artist)) {
             $this->artists->add($artist);
-            $artist->addTrack($this);
         }
 
         return $this;
@@ -87,36 +72,67 @@ class Track
 
     public function removeArtist(Artist $artist): static
     {
-        if ($this->artists->removeElement($artist)) {
-            $artist->removeTrack($this);
-        }
+        $this->artists->removeElement($artist);
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Album>
-     */
-    public function getAlbums(): Collection
+    public function getComposerName(): ?string
     {
-        return $this->albums;
+        return $this->composerName;
     }
 
-    public function addAlbum(Album $album): static
+    public function setComposerName(string $composerName): static
     {
-        if (!$this->albums->contains($album)) {
-            $this->albums->add($album);
-            $album->addTrack($this);
-        }
+        $this->composerName = $composerName;
 
         return $this;
     }
 
-    public function removeAlbum(Album $album): static
+    public function getAlbum(): ?Album
     {
-        if ($this->albums->removeElement($album)) {
-            $album->removeTrack($this);
-        }
+        return $this->album;
+    }
+
+    public function setAlbum(?Album $album): static
+    {
+        $this->album = $album;
+
+        return $this;
+    }
+
+    public function getGenreNames(): array
+    {
+        return $this->genreNames;
+    }
+
+    public function setGenreNames(array $genreNames): static
+    {
+        $this->genreNames = $genreNames;
+
+        return $this;
+    }
+
+    public function getTrackNumber(): ?int
+    {
+        return $this->trackNumber;
+    }
+
+    public function setTrackNumber(int $trackNumber): static
+    {
+        $this->trackNumber = $trackNumber;
+
+        return $this;
+    }
+
+    public function getDurationInMs(): ?int
+    {
+        return $this->durationInMs;
+    }
+
+    public function setDurationInMs(int $durationInMs): static
+    {
+        $this->durationInMs = $durationInMs;
 
         return $this;
     }

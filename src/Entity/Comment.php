@@ -22,9 +22,6 @@ class Comment
     private ?User $author = null;
 
     #[ORM\ManyToOne(inversedBy: 'comments')]
-    private ?Album $album = null;
-
-    #[ORM\ManyToOne(inversedBy: 'comments')]
     private ?Track $track = null;
 
     public function getId(): ?int
@@ -52,18 +49,6 @@ class Comment
     public function setAuthor(?User $author): static
     {
         $this->author = $author;
-
-        return $this;
-    }
-
-    public function getAlbum(): ?Album
-    {
-        return $this->album;
-    }
-
-    public function setAlbum(?Album $album): static
-    {
-        $this->album = $album;
 
         return $this;
     }
